@@ -123,7 +123,7 @@ function GetBody() {
             $.log(
                 `[${$.name}] 助力Body✅: 成功, export zjdbody='${zjdBodyVal}'`
             );
-            $.msg($.name, `获取赚京豆助力Body: 成功🎉`, `${zjdBodyVal}'\n`);
+            $.msg($.name, `获取赚京豆助力Body: 成功🎉`, `${zjdBodyVal}'\n);
         };
         $done();
     }
