@@ -67,7 +67,7 @@ if (isGetbody) {
 
 function GetBody() {
 
-    if ($request && $request.url.indexOf("functionId=happyDigHelp") >= 0) {
+    if ($request && $request.url.indexOf("functionId=happyDigHome") >= 0) {
         var body = $response.body;
         let obj = JSON.parse(body);
             if(obj.data.assistStatus === 1){
