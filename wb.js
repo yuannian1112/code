@@ -6,7 +6,7 @@ api.m.jd.com
 
 */
 const $ = new Env('挖宝api');
-let cookiesArr = [], cookie = '',  notify,  allMessage = '' ;
+let notify,  allMessage = '' ;
 const logs = 0; // 0为关闭日志，1为开启
 $.message = '';
 
@@ -17,262 +17,45 @@ if (isGetbody) {
     $.done();
 }
 
-!(async () => {
-  await requireConfig();
-  if (!cookiesArr[0]) {
-    $.msg($.name, '【提示】请先获取京东账号一cookie\n直接使用NobyDa的京东签到获取', 'https://bean.m.jd.com/bean/signIndex.action', {"open-url": "https://bean.m.jd.com/bean/signIndex.action"});
-    return;
-  }
-
-  for ( let b = 0; b < $.zjdbodyArr.length; b++){
-    label = 0;
-    for (let i = 0; i < cookiesArr.length; i++) {
-    if (cookiesArr[i]) {
-      cookie = cookiesArr[i];
-      $.UserName = decodeURIComponent(cookie.match(/pt_pin=([^; ]+)(?=;?)/) && cookie.match(/pt_pin=([^; ]+)(?=;?)/)[1])
-      $.index = i + 1;
-      $.isLogin = true;
-      $.nickName = '';
-      await TotalBean();
-      console.log(`\n开始【京东账号${$.index}】${$.nickName || $.UserName}\n`);
-      if (!$.isLogin) {
-        $.msg($.name, `【提示】cookie已失效`, `京东账号${$.index} ${$.nickName || $.UserName}\n请重新登录获取\nhttps://bean.m.jd.com/bean/signIndex.action`, {"open-url": "https://bean.m.jd.com/bean/signIndex.action"});
-
-        if ($.isNode()) {
-          await notify.sendNotify(`${$.name}cookie已失效 - ${$.UserName}`, `京东账号${$.index} ${$.UserName}\n请重新登录获取cookie`);
-        }
-        continue
-      }
-      if (label === 4){
-          break
-        }
-      zlbody = $.zjdbodyArr[b];
-      await vvipclub_distributeBean_assist(1000);
-    }
-  }
-
-  }
-
-  if ($.isNode()) {
-      await notify.sendNotify($.name, $.message);
-  }
-})()
-    .catch((e) => {
-      $.log('', `❌ ${$.name}, 失败! 原因: ${e}!`, '')
-    })
-    .finally(() => {
-      $.done();
-    });
-
 
 function GetBody() {
-
-    if ($request && $request.url.indexOf("functionId=happyDigHome") >= 0) {
-        var body = $response.body;
-        let obj = JSON.parse(body);
-            if(obj.data.assistStatus === 1){
-                if(obj.data.assistValidMilliseconds < 3570000 ){
-                    encPin = obj.data.encPin;
-                    console.log(`触发自己助力自己`);
-                    obj['data']['encPin']= randomString(27) + '_Z5gj\n'
-
-                }
-
-                // obj['data']['assistStatus']= 3
-            }
-            body = JSON.stringify(obj);
-
-       $done({body});
-    }
     if ($request && $request.url.indexOf("functionId=happyDigHelp") >= 0) {
-
-
         if (typeof $request.body !== 'undefined'){
-             modifiedBody = $request.body;
-            const zjdBodyVal = modifiedBody;
-            if (zjdBodyVal) $.setdata(zjdBodyVal, "zjdbody");
+            modifiedBody = $request.body;
+            const wbBodyVal = modifiedBody;
+            if (wbBodyVal) $.setdata(wbBodyVal, "wbbody");
             $.log(
-                `[${$.name}] 助力Body✅: 成功, export zjdbody='${zjdBodyVal}'`
+                `助力Body✅: 成功, export wbbody='${wbBodyVal}'`
             );
-            $.msg($.name, `获取赚京豆助力Body: 成功🎉`, `export zjdbody='${zjdBodyVal}'\n#设置变量`);
+            $.msg(`获取助力Body: 成功🎉`, `export wbbody='${wbBodyVal}'\n#设置变量`);
         };
         $done();
     }
 }
 
-//助力
-async function vvipclub_distributeBean_assist(timeout = 500) {
-    return new Promise((resolve) => {
-        setTimeout(() => {
-            let url = {
-                url: `https://api.m.jd.com/api?functionId=vvipclub_distributeBean_assist&fromType=wxapp&timestamp=${(new Date).getTime()}`,
-                headers: {
-                      'Cookie': cookie,
-                      'content-type': 'application/x-www-form-urlencoded',
-                      'Connection': 'keep-alive',
-                      'Accept-Encoding': 'gzip,compress,br,deflate',
-                      'Referer': 'https://servicewechat.com/wxa5bf5ee667d91626/185/page-frame.html',
-                      'Host': 'api.m.jd.com',
-                      'User-Agent': $.isNode() ? (process.env.JD_USER_AGENT ? process.env.JD_USER_AGENT : (require('./USER_AGENTS').USER_AGENT)) : ($.getdata('JDUA') ? $.getdata('JDUA') : "Mozilla/5.0 (iPhone; CPU iPhone OS 15_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 MicroMessenger/8.0.18(0x18001236) NetType/WIFI Language/zh_CN")
-                  },
-                body: zlbody
-            };
-            // console.log(JSON.stringify(url));
-            $.post(url, async (err, resp, data) => {
-                try {
-                    if (logs) $.log(`${O}, 瓜分京豆🚩: ${data}`);
-                    $.data = JSON.parse(data);
-                    if ($.data.success) {
-                        console.log(`助力成功🎉`);
-                        $.message += `助力成功🎉\n`;
-                        if ($.data.data.assistedNum === 4){
-                          label = 4;
-                          console.log(`该团已完成助力🎉`);
-                          $.message += `该团已完成助力🎉\n`;
-                          // await notify.sendNotify($.name, $.message);
-                        }
-                     } else {
-
-                      if ($.data.resultCode === "9200011"){
-                        console.log(`您已经助力过`);
-                        return
-                      }
-                      if ($.data.resultCode === "2400205"){
-                        console.log(`该团已完成`);
-                        $.message += `该团已完成，不需要助力了。\n`;
-                        // await notify.sendNotify($.name, $.message);
-                        label = 5;
-                        return
-                      }
-                      if ($.data.resultCode === "2400203"){
-                        console.log(`你的助力次数已达上限`);
-                        return
-                      }
-                      if ($.data.resultCode === "9000013"){
-                        console.log(`body参数不正确`);
-                        label = 5;
-                        return
-                      }
-                      if ($.data.resultCode === "90000014"){
-                          $.message += `任务超时或已完成\n`;
-                        // await notify.sendNotify($.name, $.message);
-                        console.log(`任务超时或已完成`);
-                        label = 4;
-                        return
-                      }
-                      console.log(`${data}`);
-
-                    }
-
-                } catch (e) {
-                    $.logErr(e, resp);
-                } finally {
-                    resolve()
-                }
-            })
-        }, timeout)
-    })
-}
-function requireConfig() {
-  return new Promise(resolve => {
-    // console.log('开始获取助力body\n')
-    notify = $.isNode() ? require('./sendNotify') : '';
-    //Node.js用户请在jdCookie.js处填写京东ck;
-    const jdCookieNode = $.isNode() ? require('./jdCookie.js') : '';
-    const zjdbodyArrNode = $.isNode() ? process.env.zjdbody.split('@') : [];
-    //IOS等用户直接用NobyDa的jd cookie
-    if ($.isNode()) {
-      Object.keys(jdCookieNode).forEach((item) => {
-        if (jdCookieNode[item]) {
-          cookiesArr.push(jdCookieNode[item])
-        }
-      });
-      if (process.env.JD_DEBUG && process.env.JD_DEBUG === 'false') console.log = () => {};
-    } else {
-      cookiesArr = [$.getdata('CookieJD'), $.getdata('CookieJD2'), ...jsonParse($.getdata('CookiesJD') || "[]").map(item => item.cookie)].filter(item => !!item);
-    }
-    console.log(`共${cookiesArr.length}个京东账号\n`)
-    $.zjdbodyArr = [];
-    if ($.isNode()) {
-      Object.keys(zjdbodyArrNode).forEach((item) => {
-        if (zjdbodyArrNode[item]) {
-          $.zjdbodyArr.push(zjdbodyArrNode[item])
-        }
-      })
-    } else {
-      if ($.getdata('zjdbody')) $.zjdbodyArr = $.getdata('zjdbody').split('@').filter(item => !!item);
-      // console.log(`\nBoxJs设置的${$.name}赚京豆助力body:${$.getdata('zjdbody') ? $.getdata('zjdbody') : '暂无'}\n`);
-    }
-
-    console.log(`您提供了${$.zjdbodyArr.length}个账号的赚京豆助力body\n`);
-    resolve()
-  })
-}
-function TotalBean() {
-  return new Promise(async resolve => {
-    const options = {
-      "url": `https://wq.jd.com/user/info/QueryJDUserInfo?sceneval=2`,
-      "headers": {
-        "Accept": "application/json,text/plain, */*",
-        "Content-Type": "application/x-www-form-urlencoded",
-        "Accept-Encoding": "gzip, deflate, br",
-        "Accept-Language": "zh-cn",
-        "Connection": "keep-alive",
-        "Cookie": cookie,
-        "Referer": "https://wqs.jd.com/my/jingdou/my.shtml?sceneval=2",
-        "User-Agent": $.isNode() ? (process.env.JD_USER_AGENT ? process.env.JD_USER_AGENT : (require('./USER_AGENTS').USER_AGENT)) : ($.getdata('JDUA') ? $.getdata('JDUA') : "jdapp;iPhone;9.4.4;14.3;network/4g;Mozilla/5.0 (iPhone; CPU iPhone OS 14_3 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148;supportJDSHWK/1")
-      }
-    }
-    $.post(options, (err, resp, data) => {
-      try {
-        if (err) {
-          console.log(`${JSON.stringify(err)}`)
-          console.log(`${$.name} API请求失败，请检查网路重试`)
-        } else {
-          if (data) {
-            data = JSON.parse(data);
-            if (data['retcode'] === 13) {
-              $.isLogin = false; //cookie过期
-              return
-            }
-            if (data['retcode'] === 0 && data.base && data.base.nickname) {
-              $.nickName = data.base.nickname;
-            }
-          } else {
-            console.log(`京东服务器返回空数据`)
-          }
-        }
-      } catch (e) {
-        $.logErr(e)
-      } finally {
-        resolve();
-      }
-    })
-  })
-}
 
 function jsonParse(str) {
-  if (typeof str == "string") {
-    try {
-      return JSON.parse(str);
-    } catch (e) {
-      console.log(e);
-      $.msg($.name, '', '请勿随意在BoxJs输入框修改内容\n建议通过脚本去获取cookie')
-      return [];
+    if (typeof str == "string") {
+        try {
+            return JSON.parse(str);
+        } catch (e) {
+            console.log(e);
+            $.msg($.name, '', '请勿随意在BoxJs输入框修改内容\n建议通过脚本去获取cookie')
+            return [];
+        }
     }
-  }
 }
 
 function randomString(len) {
-　　len = len || 32;
- 　　var $chars = 'ABCDEFGHJKMNPQRSTWXYZabcdefhijkmnprstwxyz2345678';    /****默认去掉了容易混淆的字符oOLl,9gq,Vv,Uu,I1****/
-  　　var maxPos = $chars.length;
-  　　var pwd = '';
-  　　for (i = 0; i < len; i++) {
-  　　　　pwd += $chars.charAt(Math.floor(Math.random() * maxPos));
-  　　}
- 　　return pwd;
- };
+    len = len || 32;
+    var $chars = 'ABCDEFGHJKMNPQRSTWXYZabcdefhijkmnprstwxyz2345678';    /****默认去掉了容易混淆的字符oOLl,9gq,Vv,Uu,I1****/
+    var maxPos = $chars.length;
+    var pwd = '';
+    for (i = 0; i < len; i++) {
+        pwd += $chars.charAt(Math.floor(Math.random() * maxPos));
+    }
+    return pwd;
+};
 
 
 // prettier-ignore
