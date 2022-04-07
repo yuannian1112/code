@@ -10,12 +10,9 @@ let notify,  allMessage = '' ;
 const logs = 0; // 0为关闭日志，1为开启
 $.message = '';
 
-let isGetbody = typeof $request !== 'undefined';
 
-if (isGetbody) {
-    GetBody();
-    $.done();
-}
+await GetBody();
+
 
 
 function GetBody() {
